@@ -1,0 +1,17 @@
+{
+  "name": "flac-downloader",
+  "version": "1.0.0",
+  "description": "Web-based FLAC music downloader from Tidal & Qobuz",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "ffmpeg-static": "^5.3.0",
+    "uuid": "^10.0.0"
+  }
+}

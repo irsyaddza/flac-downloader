@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLAC Downloader — Tidal & Qobuz Hi-Res Music</title>
+  <meta name="description" content="Download lossless FLAC music from Tidal and Qobuz. Paste a track link and get high-resolution audio instantly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Background decoration -->
+  <div class="bg-decoration">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-pattern"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-section">
+        <div class="logo-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="12" fill="url(#logo-grad)"/>
+            <path d="M14 34V14l20 10-20 10z" fill="white" opacity="0.9"/>
+            <defs>
+              <linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48">
+                <stop stop-color="#059669"/>
+                <stop offset="1" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>FLAC Downloader</h1>
+          <span class="logo-subtitle">Tidal & Qobuz · Lossless Audio</span>
+        </div>
+      </div>
+      <div class="header-status" id="headerStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Ready</span>
+      </div>
+    </header>
+
+    <!-- Main Input Section -->
+    <section class="input-section">
+      <div class="glass-card input-card">
+        <div class="input-header">
+          <h2>Paste a Link or Search</h2>
+          <p>Supports Tidal, Qobuz URLs — or just type a song name to search Qobuz</p>
+        </div>
+
+        <div class="url-input-wrapper">
+          <div class="input-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </div>
+          <input 
+            type="text" 
+            id="urlInput" 
+            placeholder="Paste Tidal/Qobuz link or type song name (e.g. Blinding Lights)"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="pasteBtn" class="paste-btn" title="Paste from clipboard">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+          <button id="downloadBtn" class="download-btn" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>⬇  Download FLAC</span>
+          </button>
+
+          <!-- Search Autocomplete Dropdown -->
+          <div id="searchDropdown" class="search-dropdown hidden">
+            <ul id="searchResultsList" class="search-results-list"></ul>
+          </div>
+        </div>
+        
+
+
+        <!-- Service detection badge -->
+        <div class="service-badge-wrapper" id="serviceBadgeWrapper" style="display: none;">
+          <div class="service-badge" id="serviceBadge">
+            <span class="service-icon" id="serviceIcon"></span>
+            <span class="service-name" id="serviceName"></span>
+            <span class="service-track-id" id="serviceTrackId"></span>
+          </div>
+        </div>
+
+        <!-- Quality selector -->
+        <div class="quality-selector" id="qualitySelector" style="display: none;">
+          <label>Audio Quality:</label>
+          <div class="quality-options">
+            <button class="quality-btn active" data-quality="LOSSLESS" data-qobuz="27">
+              <span class="quality-icon">💎</span>
+              <span class="quality-label">Hi-Res</span>
+              <span class="quality-desc">24-bit / 96kHz+</span>
+            </button>
+            <button class="quality-btn" data-quality="LOSSLESS" data-qobuz="6">
+              <span class="quality-icon">🎵</span>
+              <span class="quality-label">Lossless</span>
+              <span class="quality-desc">16-bit / 44.1kHz</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Download Section -->
+    <section class="download-section" id="downloadSection" style="display: none;">
+      <div class="glass-card download-card">
+        <div class="download-header">
+          <div class="download-info">
+            <h3 id="downloadTitle">Downloading...</h3>
+            <p id="downloadSubtitle" class="download-subtitle"></p>
+          </div>
+          <div class="download-status-badge" id="downloadStatusBadge">
+            <span class="pulse-dot"></span>
+            <span id="downloadStatusText">In Progress</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-glow" id="progressGlow"></div>
+          </div>
+          <div class="progress-info">
+            <span id="progressPercent">0%</span>
+            <span id="progressSize"></span>
+          </div>
+        </div>
+
+        <!-- Download complete actions -->
+        <div class="download-actions" id="downloadActions" style="display: none;">
+          <button class="action-btn primary" id="saveFileBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Save File
+          </button>
+          <button class="action-btn secondary" id="newDownloadBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Download
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download History -->
+    <section class="history-section" id="historySection" style="display: none;">
+      <div class="glass-card history-card">
+        <div class="history-header">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Download History
+          </h3>
+          <button class="clear-history-btn" id="clearHistoryBtn" title="Clear history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Educational use only · Not affiliated with Tidal or Qobuz</p>
+    </footer>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
