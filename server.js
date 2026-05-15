@@ -8,6 +8,7 @@ const { parseTidalURL, downloadTidalTrack, fetchTidalAPIList } = require('./lib/
 const { parseQobuzURL, downloadQobuzTrack } = require('./lib/qobuz');
 const { findQobuzFromTidal } = require('./lib/songlink');
 const { embedMetadata, downloadCover, convertToFlac, getFFmpegPath } = require('./lib/metadata');
+const { fetchLyrics } = require('./lib/lyrics');
 const { sanitizeFilename, ensureDir, formatSize } = require('./lib/utils');
 
 const app = express();
@@ -291,6 +292,28 @@ async function processDownload(downloadId, service, trackId, quality) {
       if (fullMeta && fullMeta.title) {
         console.log(`[Download ${downloadId}] Found metadata for embedding: ${fullMeta.artist} - ${fullMeta.title}`);
         
+        // Fetch lyrics from LRCLIB
+        try {
+          const lyrics = await fetchLyrics(
+            fullMeta.title,
+            fullMeta.artist,
+            fullMeta.album || null,
+            fullMeta.duration || 0
+          );
+          if (lyrics) {
+            fullMeta.syncedLyrics = lyrics.syncedLyrics;
+            fullMeta.plainLyrics = lyrics.plainLyrics;
+            dl.hasLyrics = true;
+            console.log(`[Download ${downloadId}] ✓ Lyrics attached (synced: ${!!lyrics.syncedLyrics}, plain: ${!!lyrics.plainLyrics})`);
+          } else {
+            dl.hasLyrics = false;
+            console.log(`[Download ${downloadId}] No lyrics found`);
+          }
+        } catch (lyricsErr) {
+          dl.hasLyrics = false;
+          console.warn(`[Download ${downloadId}] Lyrics fetch failed: ${lyricsErr.message}`);
+        }
+
         // Download cover if available
         let coverPath = null;
         if (fullMeta.coverUrl) {
@@ -298,7 +321,7 @@ async function processDownload(downloadId, service, trackId, quality) {
           coverPath = await downloadCover(fullMeta.coverUrl, coverDest);
         }
 
-        // Embed metadata
+        // Embed metadata (including lyrics)
         const embedSuccess = await embedMetadata(result.filePath, fullMeta, coverPath);
         
         // Cleanup cover
@@ -370,6 +393,7 @@ app.get('/api/status/:id', (req, res) => {
     completedAt: dl.completedAt,
     fallback: dl.fallbackService ? true : false,
     fallbackReason: dl.fallbackReason || null,
+    hasLyrics: dl.hasLyrics || false,
   });
 });
 
