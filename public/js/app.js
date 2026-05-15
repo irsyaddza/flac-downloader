@@ -374,6 +374,9 @@ function onDownloadComplete(data) {
   downloadTitle.textContent = data.fileName || 'Download Complete';
   
   let subtitle = `${data.quality || 'FLAC'} · ${data.sizeFormatted || ''}`;
+  if (data.hasLyrics) {
+    subtitle += ' · 🎤 Lyrics';
+  }
   if (data.fallback) {
     subtitle += ' · 🔄 via Qobuz fallback';
   }
@@ -386,6 +389,9 @@ function onDownloadComplete(data) {
     ? `Downloaded via Qobuz (Tidal was unavailable): ${data.fileName}`
     : `Download complete: ${data.fileName}`;
   showToast(toastMsg, 'success');
+  if (data.hasLyrics) {
+    showToast('🎤 Synced lyrics embedded!', 'info');
+  }
 }
 
 function onDownloadFailed(data) {
